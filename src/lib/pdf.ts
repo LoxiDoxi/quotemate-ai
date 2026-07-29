@@ -26,6 +26,7 @@ type PDFData = {
   scopeOfWork: string[];
   materials: LineItem[];
   labor: LineItem[];
+
   termsAndConditions: string[];
 
   estimatedTotal?: string;
@@ -33,130 +34,128 @@ type PDFData = {
 
 export function generatePDF(data: PDFData) {
   const doc = new jsPDF();
-doc.setFontSize(16);
-doc.text(data.businessName, 20, 20);
 
-doc.setFontSize(10);
-
-if (data.abn) {
-  doc.text(`ABN: ${data.abn}`, 20, 28);
-}
-
-if (data.phone) {
-  doc.text(`Phone: ${data.phone}`, 20, 34);
-}
-
-if (data.email) {
-  doc.text(`Email: ${data.email}`, 20, 40);
-}
-
-if (data.address) {
-  doc.text(`Address: ${data.address}`, 20, 46);
-}
-
-
-doc.setFontSize(16);
-doc.text(data.businessName, 20, 20);
-
-doc.setFontSize(10);
-
-if (data.abn) {
-  doc.text(`ABN: ${data.abn}`, 20, 28);
-}
-
-if (data.phone) {
-  doc.text(`Phone: ${data.phone}`, 20, 34);
-}
-
-if (data.email) {
-  doc.text(`Email: ${data.email}`, 20, 40);
-}
-
-if (data.address) {
-  doc.text(`Address: ${data.address}`, 20, 46);
-}
   let y = 20;
 
-  function addLine(text: string, size = 11) {
+  function addText(text: string, size = 11, bold = false) {
     doc.setFontSize(size);
+
+    if (bold) {
+      doc.setFont("helvetica", "bold");
+    } else {
+      doc.setFont("helvetica", "normal");
+    }
+
     doc.text(text, 20, y);
     y += 7;
   }
 
-  addLine(data.businessName, 22);
+  // Business Header
+  addText(data.businessName, 20, true);
 
-  if (data.abn) addLine(`ABN: ${data.abn}`);
-  if (data.phone) addLine(`Phone: ${data.phone}`);
-  if (data.email) addLine(`Email: ${data.email}`);
-  if (data.address) addLine(`Address: ${data.address}`);
+  if (data.abn) addText(`ABN: ${data.abn}`);
+  if (data.phone) addText(`Phone: ${data.phone}`);
+  if (data.email) addText(`Email: ${data.email}`);
+  if (data.address) addText(`Address: ${data.address}`);
+
+  y += 8;
+
+  // Quote Information
+  addText("QUOTE", 18, true);
+  addText(`Quote Number: ${data.quoteNumber}`);
+  addText(`Date: ${data.quoteDate}`);
 
   y += 5;
 
-  addLine("QUOTE", 18);
-  addLine(`Quote Number: ${data.quoteNumber}`);
-  addLine(`Date: ${data.quoteDate}`);
-
-  y += 5;
-
-  addLine("Customer Details", 13);
-  addLine(`Name: ${data.customerName}`);
+  // Customer Details
+  addText("Customer Details", 14, true);
+  addText(`Name: ${data.customerName}`);
 
   if (data.customerPhone) {
-    addLine(`Phone: ${data.customerPhone}`);
+    addText(`Phone: ${data.customerPhone}`);
   }
 
   if (data.customerEmail) {
-    addLine(`Email: ${data.customerEmail}`);
+    addText(`Email: ${data.customerEmail}`);
   }
 
   if (data.customerAddress) {
-    addLine(`Address: ${data.customerAddress}`);
+    addText(`Address: ${data.customerAddress}`);
   }
 
-  y += 5;
+  y += 8;
 
-  addLine(data.title, 16);
+  // Job Title
+  addText(data.title, 15, true);
 
-  addLine("Scope of Work", 13);
+  y += 3;
+
+  // Scope
+  addText("Scope of Work", 14, true);
 
   data.scopeOfWork.forEach((item) => {
-    addLine(`• ${item}`);
+    addText(`• ${item}`);
   });
 
+  // Materials
   if (data.materials.length > 0) {
     y += 5;
-    addLine("Materials", 13);
+
+    addText("Materials", 14, true);
 
     data.materials.forEach((item) => {
-      addLine(
-        `${item.description} | ${item.quantity ?? ""} | ${item.total ?? ""}`,
+      addText(
+        `${item.description} | Qty: ${item.quantity ?? "-"} | ${item.total ?? ""}`
       );
     });
   }
 
+  // Labour
   if (data.labor.length > 0) {
     y += 5;
-    addLine("Labour", 13);
+
+    addText("Labour", 14, true);
 
     data.labor.forEach((item) => {
-      addLine(
-        `${item.description} | ${item.quantity ?? ""} | ${item.total ?? ""}`,
+      addText(
+        `${item.description} | ${item.quantity ?? ""} | ${item.total ?? ""}`
       );
     });
   }
 
+
+  // Total
   if (data.estimatedTotal) {
-    y += 5;
-    addLine(`Estimated Total: ${data.estimatedTotal}`, 15);
+    y += 8;
+
+    addText(
+      `Estimated Total: ${data.estimatedTotal}`,
+      16,
+      true
+    );
   }
 
-  y += 5;
 
-  addLine("Terms and Conditions", 13);
+  // Terms
+  y += 8;
+
+  addText("Terms and Conditions", 14, true);
 
   data.termsAndConditions.forEach((term, index) => {
-    addLine(`${index + 1}. ${term}`);
+    addText(`${index + 1}. ${term}`);
   });
+
+
+  // Footer
+  y += 10;
+
+  doc.setFontSize(9);
+  doc.text(
+    "Thank you for your business.",
+    20,
+    y
+  );
+
 
   doc.save(`Quote-${data.quoteNumber}.pdf`);
 }
