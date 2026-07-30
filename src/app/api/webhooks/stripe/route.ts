@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let event;
+  let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error("Webhook error:", err.message);
+    console.error("Webhook verification failed:", err.message);
 
     return NextResponse.json(
       { error: "Webhook verification failed" },
@@ -34,15 +34,26 @@ export async function POST(req: Request) {
     );
   }
 
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object as Stripe.Checkout.Session;
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+      console.log("✅ Payment completed:", session.id);
 
-    console.log("Payment successful:", session.id);
+      console.log({
+        customer: session.customer,
+        subscription: session.subscription,
+        email: session.customer_details?.email,
+      });
 
-    // THIS IS WHERE WE WILL ADD SUPABASE UPDATE LATER
+      // NEXT STEP:
+      // Update Supabase user here to Pro
+      break;
+    }
+
+    default:
+      console.log("Unhandled event:", event.type);
   }
-
 
   return NextResponse.json({ received: true });
 }
