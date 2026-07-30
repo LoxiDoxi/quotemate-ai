@@ -6,6 +6,7 @@ import type { Quote, QuoteLineItem } from "@/lib/types";
 import { generatePDF } from "@/lib/pdf";
 type BusinessProfile = {
   businessName: string;
+  logoUrl?: string;
   abn: string;
   phone: string;
   email: string;
@@ -23,10 +24,11 @@ interface QuoteResultProps {
 
 const defaultProfile: BusinessProfile = {
   businessName: "QuoteMate AI",
-  abn: "",
-  phone: "",
-  email: "",
-  address: "",
+  logoUrl: "/logo.png",
+  abn: "ABN COMING SOON",
+  phone: "0400 000 000",
+  email: "hello@quotemate.ai",
+  address: "Australia",
 };
 
 function createQuoteNumber() {
@@ -141,7 +143,7 @@ export default function QuoteResult({
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("company_name, abn, phone, email, address")
+        .select("company_name, abn, phone, email, address, logo_url")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -152,6 +154,7 @@ export default function QuoteResult({
 
       setBusiness({
         businessName: data.company_name?.trim() || defaultProfile.businessName,
+        logoUrl: data.logo_url,
         abn: data.abn?.trim() || "",
         phone: data.phone?.trim() || "",
         email: data.email?.trim() || "",
@@ -180,8 +183,24 @@ export default function QuoteResult({
   }
 
   function handlePrint() {
+
+ const materialsTotal = quote.materials.reduce(
+  (sum, item) => sum + Number(String(item.total).replace("$", "") || 0),
+  0
+);
+
+const labourTotal = quote.labor.reduce(
+  (sum, item) => sum + Number(String(item.total).replace("$", "") || 0),
+  0
+);
+
+  const subtotal = materialsTotal + labourTotal;
+  const gst = subtotal * 0.1;
+  const estimatedTotal = subtotal + gst;
+
   generatePDF({
     businessName: business.businessName,
+    logoUrl: business.logoUrl,
     abn: business.abn,
     phone: business.phone,
     email: business.email,
@@ -196,8 +215,12 @@ export default function QuoteResult({
     scopeOfWork: quote.scopeOfWork,
     materials: quote.materials,
     labor: quote.labor,
-    termsAndConditions: quote.termsAndConditions,
-    estimatedTotal: quote.estimatedTotal,
+
+    subtotal: `$${subtotal.toFixed(2)}`,
+gst: `$${gst.toFixed(2)}`,
+
+termsAndConditions: quote.termsAndConditions,
+estimatedTotal: `$${estimatedTotal.toFixed(2)}`,
   });
 }
 
@@ -244,9 +267,13 @@ export default function QuoteResult({
         <header className="bg-slate-950 px-6 py-7 text-white sm:px-10">
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-black shadow-lg shadow-blue-600/30">
-                Q
-              </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
+  <img
+    src="/logo.png"
+    alt="QuoteMate AI"
+    className="h-full w-full object-contain"
+  />
+</div>
 
               <div>
                 <h2 className="text-xl font-bold">{business.businessName}</h2>

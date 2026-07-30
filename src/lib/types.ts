@@ -32,6 +32,9 @@ export interface Quote {
   materials: QuoteLineItem[];
   labor: QuoteLineItem[];
   termsAndConditions: string[];
+
+  subtotal?: string;
+  gst?: string;
   estimatedTotal?: string;
 }
 

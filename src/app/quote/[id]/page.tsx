@@ -40,11 +40,10 @@ export default function SavedQuotePage() {
       }
 
       const { data, error: quoteError } = await supabase
-        .from("quotes")
-        .select("*")
-        .eq("id", params.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
+  .from("quotes")
+  .select("*")
+  .eq("id", params.id)
+  .maybeSingle();
 
       if (quoteError) {
         setError(quoteError.message);

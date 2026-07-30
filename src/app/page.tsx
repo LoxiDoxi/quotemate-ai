@@ -8,6 +8,7 @@ import type { JobType, Quote } from "@/lib/types";
 
 type SavedQuote = {
   id: string;
+  customer_id?: number;
   customerName: string;
   customerPhone?: string;
   customerEmail?: string;
@@ -25,6 +26,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleGenerate(data: {
+  customerId?: number;
   customerName: string;
   customerPhone?: string;
   customerEmail?: string;
@@ -37,10 +39,11 @@ export default function HomePage() {
 
     try {
       const res = await fetch("/api/generate-quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify(data),
+});
 
       const json = await res.json();
 
@@ -51,9 +54,12 @@ export default function HomePage() {
       const generatedQuote = json.quote as Quote;
 
       const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+  data: { user },
+  error: userError,
+} = await supabase.auth.getUser();
+
+console.log("PAGE USER:", user);
+console.log("PAGE USER ERROR:", userError);
 
       if (userError) {
         throw new Error(userError.message);
@@ -66,16 +72,23 @@ export default function HomePage() {
 
       const savedQuote: SavedQuote & { user_id: string } = {
   id: crypto.randomUUID(),
+
+  customer_id: data.customerId,
+
   customerName: data.customerName,
   customerPhone: data.customerPhone,
   customerEmail: data.customerEmail,
   customerAddress: data.customerAddress,
-        jobType: data.jobType,
-        jobNotes: data.jobNotes,
-        createdAt: new Date().toISOString(),
-        quote: generatedQuote,
-        user_id: user.id,
-      };
+
+  jobType: data.jobType,
+  jobNotes: data.jobNotes,
+
+  createdAt: new Date().toISOString(),
+
+  quote: generatedQuote,
+
+  user_id: user.id,
+};
 
       const { error: cloudSaveError } = await supabase
         .from("quotes")
@@ -116,10 +129,10 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
             <img
-            src="/icon.png"
-            alt="QuoteMate AI"
-            className="h-11 w-11 rounded-2xl"
-           />
+  src="/logo.png"
+  alt="QuoteMate AI"
+  className="h-11 w-11 rounded-2xl object-contain"
+/>
 
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white">

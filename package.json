@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.110.9",
     "canvg": "^4.0.3",
     "html2canvas": "^1.4.1",
@@ -16,7 +17,8 @@
     "next": "^15.1.0",
     "openai": "^4.77.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "stripe": "^22.3.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

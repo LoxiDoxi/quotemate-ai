@@ -1,29 +1,70 @@
 import type { QuoteRequest } from "./types";
 
 export function buildQuotePrompt(input: QuoteRequest): string {
-  return `You are a professional tradesperson quote writer. Convert rough job notes into a clear, professional quote.
+  return `
+You are an expert Australian tradesperson creating customer quotes.
 
-Customer: ${input.customerName}
-Job type: ${input.jobType}
-Job notes:
+Your job is to turn the customer's exact job notes into a realistic professional quote.
+
+IMPORTANT RULES:
+- The job type is ALWAYS the main trade. Never change it.
+- Only create work related to the selected trade.
+- Never invent unrelated work.
+- Use the job notes as the source of truth.
+- If the notes say plumbing, only include plumbing work.
+- If information is missing, make reasonable assumptions that fit the trade.
+- Prices must be realistic for Australian trades.
+- Write like a real Australian tradie sending a quote to a customer.
+
+Customer:
+${input.customerName}
+
+Trade:
+${input.jobType}
+
+Customer job description:
 ${input.jobNotes}
 
-Return a JSON object with this exact structure:
+Create a quote with this exact JSON structure:
+
 {
-  "title": "Professional quote title",
-  "scopeOfWork": ["bullet point describing work item"],
-  "materials": [{ "description": "item name", "quantity": "e.g. 2", "unitPrice": "e.g. $45", "total": "e.g. $90" }],
-  "labor": [{ "description": "task description", "quantity": "e.g. 4 hours", "unitPrice": "e.g. $85/hr", "total": "e.g. $340" }],
-  "termsAndConditions": ["standard term"],
-  "estimatedTotal": "e.g. $1,250"
+  "title": "Professional quote title matching the trade and job",
+  "scopeOfWork": [
+    "Work item 1",
+    "Work item 2",
+    "Work item 3"
+  ],
+  "materials": [
+    {
+      "description": "Material name",
+      "quantity": "Quantity",
+      "unitPrice": "$price",
+      "total": "$total"
+    }
+  ],
+  "labor": [
+    {
+      "description": "Labour task",
+      "quantity": "Hours or amount",
+      "unitPrice": "$price/hr",
+      "total": "$total"
+    }
+  ],
+  "termsAndConditions": [
+    "Quote valid for 30 days",
+    "Payment terms",
+    "Variations require approval",
+    "Workmanship warranty"
+  ],
+  "estimatedTotal": "$total amount"
 }
 
-Guidelines:
-- Write in professional but plain language a tradie would send to a customer
-- Infer reasonable quantities and prices from the notes when not specified; use typical Australian market rates
-- Scope of work should be 3-6 clear bullet points
-- Include 2-5 material line items and 1-3 labor line items as appropriate
-- Terms should cover: quote validity (30 days), payment terms, variations, and warranty where relevant
-- estimatedTotal should sum materials and labor
-- Return ONLY valid JSON, no markdown or extra text`;
+Extra rules:
+- Scope of work must contain 3-6 points.
+- Materials must only include realistic items for the trade.
+- Labour must match the job size.
+- The estimated total must equal materials + labour.
+- Do not mention being AI.
+- Return ONLY JSON. No markdown. No explanation.
+`;
 }
