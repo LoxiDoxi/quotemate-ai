@@ -33,17 +33,39 @@ export default function CustomerProfilePage() {
 
 
   useEffect(() => {
+
     async function loadCustomer() {
+
+      setLoading(true);
+
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+
+      if (!session?.user) {
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000)
+        );
+
+      }
+
 
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
 
+
       if (!user) {
+
         router.replace("/login");
         return;
+
       }
+
 
 
       const { data: customerData, error: customerError } =
@@ -55,11 +77,15 @@ export default function CustomerProfilePage() {
           .single();
 
 
+
       if (customerError) {
+
         console.log(customerError);
         setLoading(false);
         return;
+
       }
+
 
 
       setCustomer(customerData);
@@ -76,39 +102,52 @@ export default function CustomerProfilePage() {
         });
 
 
+
       if (quoteData) {
+
         setQuotes(quoteData);
+
       }
 
 
+
       setLoading(false);
+
     }
+
 
 
     if (customerId) {
+
       loadCustomer();
+
     }
+
 
   }, [customerId, router]);
 
 
 
   if (loading) {
+
     return (
       <main className="min-h-screen bg-slate-950 p-10 text-white">
         Loading...
       </main>
     );
+
   }
 
 
 
   if (!customer) {
+
     return (
       <main className="min-h-screen bg-slate-950 p-10 text-white">
         Customer not found.
       </main>
     );
+
   }
 
 
@@ -118,7 +157,6 @@ export default function CustomerProfilePage() {
 
       <div className="mx-auto max-w-5xl">
 
-
         <button
           onClick={() => router.back()}
           className="mb-6 text-blue-400"
@@ -127,9 +165,7 @@ export default function CustomerProfilePage() {
         </button>
 
 
-
         <section className="rounded-3xl bg-white p-8 text-slate-950">
-
 
           <h1 className="text-4xl font-black">
             {customer.name}
@@ -138,20 +174,13 @@ export default function CustomerProfilePage() {
 
           <div className="mt-5 space-y-2">
 
-            {customer.phone && (
-              <p>📞 {customer.phone}</p>
-            )}
+            {customer.phone && <p>📞 {customer.phone}</p>}
 
-            {customer.email && (
-              <p>✉️ {customer.email}</p>
-            )}
+            {customer.email && <p>✉️ {customer.email}</p>}
 
-            {customer.address && (
-              <p>📍 {customer.address}</p>
-            )}
+            {customer.address && <p>📍 {customer.address}</p>}
 
           </div>
-
 
         </section>
 
@@ -159,11 +188,9 @@ export default function CustomerProfilePage() {
 
         <section className="mt-8 rounded-3xl bg-white p-8 text-slate-950">
 
-
           <h2 className="text-2xl font-black">
             Quote History
           </h2>
-
 
 
           {quotes.length === 0 ? (
@@ -176,7 +203,7 @@ export default function CustomerProfilePage() {
 
             <div className="mt-5 space-y-4">
 
-              {quotes.map((quote)=>(
+              {quotes.map((quote) => (
 
                 <div
                   key={quote.id}
@@ -199,7 +226,6 @@ export default function CustomerProfilePage() {
                     ).toLocaleDateString()}
                   </p>
 
-
                 </div>
 
               ))}
@@ -208,9 +234,7 @@ export default function CustomerProfilePage() {
 
           )}
 
-
         </section>
-
 
       </div>
 
