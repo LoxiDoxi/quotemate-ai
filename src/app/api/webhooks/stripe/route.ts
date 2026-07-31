@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-06-24.dahlia",
 });
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -37,14 +42,10 @@ export async function POST(req: Request) {
 
 
   try {
-    const supabase = await createSupabaseServerClient();
-
-
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
       const userId = session.metadata?.user_id;
-
 
       if (!userId) {
         console.error("Missing user_id in metadata");
@@ -86,7 +87,6 @@ export async function POST(req: Request) {
 
 
   } catch (error: any) {
-
     console.error("Webhook error:", error.message);
 
     return NextResponse.json(
