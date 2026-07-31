@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
+  const [plan, setPlan] = useState("free");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,10 +49,25 @@ export default function DashboardPage() {
         return;
       }
 
+      // Load user's subscription plan
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!profileError && profile?.plan) {
+        setPlan(profile.plan);
+      }
+
+
+      // Load only this user's quotes
       const { data, error: quotesError } = await supabase
         .from("quotes")
         .select("*")
+        .eq("user_id", user.id)
         .order("createdAt", { ascending: false });
+
 
       if (quotesError) {
         setError(quotesError.message);
@@ -87,20 +103,26 @@ export default function DashboardPage() {
 
     if (!confirmed) return;
 
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
 
     if (!user) {
       router.replace("/login");
       return;
     }
+    
+    console.log("LOGGED IN USER:", user.id);
+
 
     await supabase
       .from("quotes")
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
+
 
     setQuotes((current) =>
       current.filter((quote) => quote.id !== id)
@@ -121,10 +143,12 @@ export default function DashboardPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
+
       if (!user) {
         router.replace("/login");
         return;
       }
+
 
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -139,8 +163,6 @@ export default function DashboardPage() {
 
       const data = await response.json();
 
-      console.log("Checkout response:", data);
-
 
       if (data.url) {
         window.location.href = data.url;
@@ -150,7 +172,7 @@ export default function DashboardPage() {
 
 
     } catch (error) {
-      console.error("Checkout error:", error);
+      console.error(error);
       alert("Something went wrong opening checkout");
     }
   }
@@ -171,25 +193,29 @@ export default function DashboardPage() {
                 Q
               </div>
 
+
               <div>
                 <p className="font-bold">
                   QuoteMate AI
                 </p>
 
                 <p className="text-xs text-slate-400">
-                  Cloud quote history
+                  {plan === "pro" ? "Pro Plan ⭐" : "Free Plan"}
                 </p>
+
               </div>
 
             </a>
 
 
-            <button
-              onClick={upgradeToPro}
-              className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-            >
-              Upgrade to Pro - $19/month
-            </button>
+            {plan !== "pro" && (
+              <button
+                onClick={upgradeToPro}
+                className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+              >
+                Upgrade to Pro - $19/month
+              </button>
+            )}
 
           </div>
 
@@ -203,6 +229,7 @@ export default function DashboardPage() {
               Customers
             </a>
 
+
             <a
               href="/settings"
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
@@ -210,12 +237,14 @@ export default function DashboardPage() {
               Settings
             </a>
 
+
             <a
               href="/"
               className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold"
             >
               New quote
             </a>
+
 
             <button
               onClick={handleLogout}
@@ -236,6 +265,7 @@ export default function DashboardPage() {
         <h1 className="text-4xl font-black">
           Quote history
         </h1>
+
 
         <p className="mt-3 text-slate-300">
           Quotes saved securely to your account.
@@ -265,9 +295,11 @@ export default function DashboardPage() {
                   {savedQuote.customerName}
                 </h2>
 
+
                 <p>
                   {savedQuote.quote.title}
                 </p>
+
 
                 <p className="mt-2 text-sm text-gray-500">
                   {formatDate(savedQuote.createdAt)}
