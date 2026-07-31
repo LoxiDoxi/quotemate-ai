@@ -21,38 +21,82 @@ export default function CustomersPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
 
-  async function loadCustomers() {
-    setLoading(true);
+
+
+  async function getCurrentUser() {
 
     const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (userError || !user) {
-      console.log("No user");
+
+    if (session?.user) {
+      return session.user;
+    }
+
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000)
+    );
+
+
+    const {
+      data: { session: retrySession },
+    } = await supabase.auth.getSession();
+
+
+    return retrySession?.user ?? null;
+
+  }
+
+
+
+  async function loadCustomers() {
+
+    setLoading(true);
+
+
+    const user = await getCurrentUser();
+
+
+    if (!user) {
+      console.log("NO AUTH SESSION");
       setLoading(false);
       return;
     }
+
+
 
     const { data, error } = await supabase
       .from("customers")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
+
+
 
     console.log("CUSTOMERS:", data);
-    console.log("ERROR:", error);
+    console.log("CUSTOMERS ERROR:", error);
+
+
 
     if (!error && data) {
       setCustomers(data);
     }
 
+
     setLoading(false);
+
   }
 
 
+
+
+
   async function addCustomer() {
+
 
     if (!name.trim()) {
       alert("Customer name required");
@@ -60,16 +104,15 @@ export default function CustomersPage() {
     }
 
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+
+    const user = await getCurrentUser();
 
 
-    if (userError || !user) {
-      alert("Please log in first");
+    if (!user) {
+      alert("Session expired. Please login again.");
       return;
     }
+
 
 
     const { error } = await supabase
@@ -83,11 +126,15 @@ export default function CustomersPage() {
       });
 
 
+
     if (error) {
+
       alert(error.message);
       console.log(error);
       return;
+
     }
+
 
 
     setName("");
@@ -95,14 +142,21 @@ export default function CustomersPage() {
     setEmail("");
     setAddress("");
 
-
     await loadCustomers();
+
   }
 
 
+
+
+
   useEffect(() => {
+
     loadCustomers();
+
   }, []);
+
+
 
 
 
@@ -132,7 +186,6 @@ export default function CustomersPage() {
           <h2 className="mb-4 text-2xl font-bold">
             Add Customer
           </h2>
-
 
 
           <div className="grid gap-3">
@@ -170,7 +223,6 @@ export default function CustomersPage() {
             />
 
 
-
             <button
               onClick={addCustomer}
               className="rounded-xl bg-blue-600 px-4 py-3 font-bold text-white"
@@ -181,8 +233,8 @@ export default function CustomersPage() {
 
           </div>
 
-
         </section>
+
 
 
 
@@ -203,7 +255,6 @@ export default function CustomersPage() {
             </p>
 
           ) : (
-
 
             <div className="space-y-4">
 
@@ -234,7 +285,6 @@ export default function CustomersPage() {
                     <p>📍 {customer.address}</p>
                   )}
 
-
                 </div>
 
               ))}
@@ -244,12 +294,10 @@ export default function CustomersPage() {
 
           )}
 
-
         </section>
 
 
       </div>
-
 
     </main>
   );
