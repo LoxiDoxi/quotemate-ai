@@ -4,11 +4,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-
   let response = NextResponse.next({
     request,
   });
-
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,25 +19,37 @@ export async function middleware(request: NextRequest) {
         },
 
         setAll(cookiesToSet) {
-
           cookiesToSet.forEach(({ name, value, options }) => {
-
             response.cookies.set(
               name,
               value,
               options
             );
-
           });
-
         },
       },
     }
   );
 
 
-  // This refreshes the Supabase session
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+
+  console.log(
+    "MIDDLEWARE USER:",
+    user?.email ?? "NO USER"
+  );
+
+
+  if (error) {
+    console.log(
+      "MIDDLEWARE AUTH ERROR:",
+      error.message
+    );
+  }
 
 
   return response;
