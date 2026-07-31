@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
-  const [plan, setPlan] = useState("free");
+  const [plan, setPlan] = useState("");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -40,32 +40,41 @@ export default function DashboardPage() {
     setIsLoading(true);
 
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  data: { session },
+} = await supabase.auth.getSession();
+
+const user = session?.user ?? null;
 
 
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
+if (!user) {
+  console.log("NO AUTH USER FOUND");
+  setError("Please refresh and login again.");
+  setIsLoading(false);
+  return;
+}
 
 
     // force fresh profile data
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("plan")
-      .eq("user_id", user.id)
-      .maybeSingle();
+  .from("profiles")
+  .select("*")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
+console.log("PROFILE FROM DATABASE:", profile);
+console.log("PROFILE ERROR:", profileError);
 
-    console.log("PROFILE:", profile);
+console.log("PROFILE FROM DATABASE:", profile);
+console.log("PROFILE ERROR:", profileError);
 
+if (profileError) {
+  console.log("PROFILE FAILED:", profileError);
+}
 
-    if (!profileError && profile?.plan) {
-      setPlan(profile.plan);
-    } else {
-      setPlan("free");
-    }
+if (profile) {
+  setPlan(profile.plan);
+  console.log("FINAL PLAN:", profile.plan);
+}
 
 
 
@@ -95,27 +104,8 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-
-    loadDashboard();
-
-
-    const {
-      data: listener
-    } = supabase.auth.onAuthStateChange(() => {
-
-      loadDashboard();
-
-    });
-
-
-    return () => {
-
-      listener.subscription.unsubscribe();
-
-    };
-
-
-  }, []);
+  loadDashboard();
+}, []);
 
 
 

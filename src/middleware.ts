@@ -1,10 +1,8 @@
-console.log("MIDDLEWARE RUNNING");
-
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  let supabaseResponse = NextResponse.next({
     request,
   });
 
@@ -20,44 +18,43 @@ export async function middleware(request: NextRequest) {
 
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(
-              name,
-              value,
-              options
-            );
+            supabaseResponse.cookies.set(name, value, options);
           });
         },
       },
     }
   );
 
-
+  // Refresh and validate the session
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
 
+  // Only protect these routes
+  const protectedRoutes = [
+    "/dashboard",
+    "/customers",
+    "/quote",
+  ];
 
-  console.log(
-    "MIDDLEWARE USER:",
-    user?.email ?? "NO USER"
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
   );
 
-
-  if (error) {
-    console.log(
-      "MIDDLEWARE AUTH ERROR:",
-      error.message
-    );
+  // If user is not logged in, send them to login
+  if (!user && isProtectedRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
-
-  return response;
+  return supabaseResponse;
 }
-
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/dashboard/:path*",
+    "/customers/:path*",
+    "/quote/:path*",
   ],
 };

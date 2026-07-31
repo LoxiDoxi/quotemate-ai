@@ -72,29 +72,46 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // FREE PLAN LIMIT CHECK
-    const { count, error: countError } = await supabase
-      .from("quotes")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
+    // PLAN + FREE QUOTE LIMIT CHECK
+
+const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .select("plan")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
 
-    if (countError) {
-      console.error("Limit check failed:", countError);
+if (profileError) {
+  console.error("Profile check failed:", profileError);
+}
+
+
+const isPro = profile?.plan === "pro";
+
+
+const { count, error: countError } = await supabase
+  .from("quotes")
+  .select("*", { count: "exact", head: true })
+  .eq("user_id", user.id);
+
+
+if (countError) {
+  console.error("Limit check failed:", countError);
+}
+
+
+// Only block FREE users
+if (!isPro && (count ?? 0) >= 5) {
+  return NextResponse.json(
+    {
+      error:
+        "You have reached your free quote limit. Upgrade to Pro to create unlimited quotes.",
+    },
+    {
+      status: 403,
     }
-
-
-    if ((count ?? 0) >= 5) {
-      return NextResponse.json(
-        {
-          error:
-            "You have reached your free quote limit. Upgrade to Pro to create unlimited quotes.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
+  );
+}
 
 
     if (!process.env.OPENAI_API_KEY) {

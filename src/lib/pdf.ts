@@ -91,7 +91,7 @@ if (data.address) {
   doc.text(`Address: ${data.address}`, 75, headerY);
 }
 
-doc.line(20, 60, 190, 60);
+doc.line(20, 66, 190, 66);
 
 y = headerY + 15;
 
@@ -173,7 +173,7 @@ if (data.estimatedTotal) {
   doc.text("ESTIMATED TOTAL", 20, y);
 
   doc.setFontSize(18);
-  doc.text(`$${data.estimatedTotal}`, 150, y);
+  doc.text(`${data.estimatedTotal}`, 150, y);
 
   y += 10;
 
