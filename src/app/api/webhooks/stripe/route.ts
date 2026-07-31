@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-06-24.dahlia",
@@ -18,9 +18,7 @@ export async function POST(req: Request) {
     );
   }
 
-
   let event: Stripe.Event;
-
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -28,31 +26,29 @@ export async function POST(req: Request) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-
-  } catch (err: any) {
-
-    console.error("Webhook verification failed:", err.message);
+  } catch (error: any) {
+    console.error("Webhook signature failed:", error.message);
 
     return NextResponse.json(
-      { error: "Webhook verification failed" },
+      { error: "Webhook signature failed" },
       { status: 400 }
     );
   }
 
 
-
   try {
+    const supabase = await createSupabaseServerClient();
+
 
     if (event.type === "checkout.session.completed") {
-
       const session = event.data.object as Stripe.Checkout.Session;
-
 
       const userId = session.metadata?.user_id;
 
 
       if (!userId) {
-        console.error("No user id in metadata");
+        console.error("Missing user_id in metadata");
+
         return NextResponse.json(
           { error: "Missing user id" },
           { status: 400 }
@@ -60,28 +56,27 @@ export async function POST(req: Request) {
       }
 
 
-      const supabase = await createClient();
-
-
-      const subscriptionId =
-        typeof session.subscription === "string"
-          ? session.subscription
-          : null;
-
-
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({
           plan: "pro",
           stripe_customer_id: session.customer,
-          subscription_id: subscriptionId,
+          subscription_id: session.subscription,
         })
         .eq("user_id", userId);
 
 
+      if (error) {
+        console.error("Supabase update error:", error.message);
+
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500 }
+        );
+      }
+
 
       console.log("User upgraded:", userId);
-
     }
 
 
@@ -92,11 +87,11 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
 
-    console.error("Webhook processing error:", error);
+    console.error("Webhook error:", error.message);
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: error.message || "Webhook failed",
       },
       {
         status: 500,
