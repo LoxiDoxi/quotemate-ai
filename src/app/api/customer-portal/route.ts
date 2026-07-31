@@ -1,24 +1,53 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-06-24.dahlia",
+});
 
 export async function POST() {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
 
-    if (error || !user) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {}
+          },
+        },
+      }
+    );
+
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Not logged in" },
-        { status: 401 }
+        {
+          error: "Not logged in",
+        },
+        {
+          status: 401,
+        }
       );
     }
+
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -26,33 +55,36 @@ export async function POST() {
       .eq("user_id", user.id)
       .single();
 
+
     if (profileError || !profile?.stripe_customer_id) {
       return NextResponse.json(
-        { error: "No Stripe customer found" },
-        { status: 400 }
+        {
+          error: "No Stripe customer found",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
-    const portalSession =
-      await stripe.billingPortal.sessions.create({
-        customer: profile.stripe_customer_id,
-        return_url:
-          "https://quotemate-ai.vercel.app/dashboard",
-      });
 
-    return NextResponse.json({
-      url: portalSession.url,
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: "https://quotemate-ai.vercel.app/dashboard",
     });
 
-  } catch (error) {
+
+    return NextResponse.json({
+      url: session.url,
+    });
+
+
+  } catch (error: any) {
     console.error("Customer portal error:", error);
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: error.message || "Something went wrong",
       },
       {
         status: 500,
