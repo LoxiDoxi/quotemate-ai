@@ -11,18 +11,14 @@ const supabase = createClient(
 
 export async function POST() {
   try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    if (error || !user) {
       return NextResponse.json(
         { error: "Not logged in" },
         { status: 401 }
       );
     }
-
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -30,34 +26,33 @@ export async function POST() {
       .eq("user_id", user.id)
       .single();
 
-
     if (profileError || !profile?.stripe_customer_id) {
-      console.error("Profile error:", profileError);
-
       return NextResponse.json(
         { error: "No Stripe customer found" },
         { status: 400 }
       );
     }
 
-
-    const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
-      return_url: "https://quotemate-ai.vercel.app/dashboard",
-    });
-
+    const portalSession =
+      await stripe.billingPortal.sessions.create({
+        customer: profile.stripe_customer_id,
+        return_url:
+          "https://quotemate-ai.vercel.app/dashboard",
+      });
 
     return NextResponse.json({
-      url: session.url,
+      url: portalSession.url,
     });
 
-
-  } catch (error: any) {
+  } catch (error) {
     console.error("Customer portal error:", error);
 
     return NextResponse.json(
       {
-        error: error.message || "Failed to open customer portal",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
       },
       {
         status: 500,
