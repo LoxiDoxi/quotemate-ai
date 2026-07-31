@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createClient } from "@/lib/supabase-server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-06-24.dahlia",
@@ -8,6 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   const body = await req.text();
+
   const sig = req.headers.get("stripe-signature");
 
   if (!sig) {
@@ -17,7 +18,9 @@ export async function POST(req: Request) {
     );
   }
 
+
   let event: Stripe.Event;
+
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -25,8 +28,10 @@ export async function POST(req: Request) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
+
   } catch (err: any) {
-    console.error("Webhook error:", err.message);
+
+    console.error("Webhook verification failed:", err.message);
 
     return NextResponse.json(
       { error: "Webhook verification failed" },
@@ -35,41 +40,67 @@ export async function POST(req: Request) {
   }
 
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
 
-    console.log("Payment completed:", session.id);
+  try {
 
+    if (event.type === "checkout.session.completed") {
 
-    const userId = session.metadata?.user_id;
-
-    console.log("User ID:", userId);
+      const session = event.data.object as Stripe.Checkout.Session;
 
 
-    if (userId) {
-      const supabase = await createSupabaseServerClient();
+      const userId = session.metadata?.user_id;
 
 
-      const { error } = await supabase
+      if (!userId) {
+        console.error("No user id in metadata");
+        return NextResponse.json(
+          { error: "Missing user id" },
+          { status: 400 }
+        );
+      }
+
+
+      const supabase = await createClient();
+
+
+      const subscriptionId =
+        typeof session.subscription === "string"
+          ? session.subscription
+          : null;
+
+
+      await supabase
         .from("profiles")
         .update({
           plan: "pro",
           stripe_customer_id: session.customer,
-          subscription_id: session.subscription,
+          subscription_id: subscriptionId,
         })
         .eq("user_id", userId);
 
 
-      if (error) {
-        console.error("Supabase update error:", error);
-      } else {
-        console.log("User upgraded to Pro");
-      }
+
+      console.log("User upgraded:", userId);
+
     }
+
+
+    return NextResponse.json({
+      received: true,
+    });
+
+
+  } catch (error: any) {
+
+    console.error("Webhook processing error:", error);
+
+    return NextResponse.json(
+      {
+        error: error.message,
+      },
+      {
+        status: 500,
+      }
+    );
   }
-
-
-  return NextResponse.json({
-    received: true,
-  });
 }
