@@ -116,39 +116,54 @@ export default function DashboardPage() {
 
 
   async function upgradeToPro() {
-  try {
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-    });
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const data = await res.json();
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
 
-    console.log("Checkout response:", data);
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+        }),
+      });
 
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert(data.error || "Stripe checkout failed");
+
+      const data = await response.json();
+
+      console.log("Checkout response:", data);
+
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Stripe checkout failed");
+      }
+
+
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Something went wrong opening checkout");
     }
-
-  } catch (error) {
-    console.error("Checkout error:", error);
-    alert("Something went wrong opening checkout");
   }
-}
 
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
 
-
       <header className="border-b border-white/10">
 
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5">
 
-
           <div className="flex items-center gap-3">
-
 
             <a href="/" className="flex items-center gap-3">
 
@@ -176,63 +191,55 @@ export default function DashboardPage() {
               Upgrade to Pro - $19/month
             </button>
 
-
           </div>
-
 
 
           <div className="flex flex-wrap gap-2">
 
-  <a
-    href="/customers"
-    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
-  >
-    Customers
-  </a>
+            <a
+              href="/customers"
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
+            >
+              Customers
+            </a>
 
-  <a
-    href="/settings"
-    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
-  >
-    Settings
-  </a>
+            <a
+              href="/settings"
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
+            >
+              Settings
+            </a>
 
-  <a
-    href="/"
-    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold"
-  >
-    New quote
-  </a>
+            <a
+              href="/"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold"
+            >
+              New quote
+            </a>
 
-  <button
-    onClick={handleLogout}
-    className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-200"
-  >
-    Log out
-  </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-200"
+            >
+              Log out
+            </button>
 
-</div>
-
+          </div>
 
         </div>
 
       </header>
 
 
-
-
       <section className="mx-auto max-w-6xl px-6 py-12">
-
 
         <h1 className="text-4xl font-black">
           Quote history
         </h1>
 
-
         <p className="mt-3 text-slate-300">
           Quotes saved securely to your account.
         </p>
-
 
 
         <input
@@ -243,7 +250,6 @@ export default function DashboardPage() {
         />
 
 
-
         {filteredQuotes.map((savedQuote)=>(
 
           <article
@@ -251,9 +257,7 @@ export default function DashboardPage() {
             className="mt-5 rounded-3xl bg-white p-6 text-black"
           >
 
-
             <div className="flex items-center justify-between">
-
 
               <div>
 
@@ -261,23 +265,18 @@ export default function DashboardPage() {
                   {savedQuote.customerName}
                 </h2>
 
-
                 <p>
                   {savedQuote.quote.title}
                 </p>
-
 
                 <p className="mt-2 text-sm text-gray-500">
                   {formatDate(savedQuote.createdAt)}
                 </p>
 
-
               </div>
 
 
-
               <div className="flex gap-3">
-
 
                 <button
                   onClick={() =>
@@ -289,7 +288,6 @@ export default function DashboardPage() {
                 </button>
 
 
-
                 <button
                   onClick={() => deleteQuote(savedQuote.id)}
                   className="rounded-lg bg-red-500 px-4 py-2 text-white"
@@ -297,22 +295,15 @@ export default function DashboardPage() {
                   Delete
                 </button>
 
-
               </div>
-
 
             </div>
 
-
           </article>
-
 
         ))}
 
-
-
       </section>
-
 
     </main>
   );
