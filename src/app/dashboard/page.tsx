@@ -49,6 +49,8 @@ export default function DashboardPage() {
         return;
       }
 
+      console.log("LOGGED IN USER:", user.id);
+
       // Load user's subscription plan
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -113,7 +115,7 @@ export default function DashboardPage() {
       router.replace("/login");
       return;
     }
-    
+
     console.log("LOGGED IN USER:", user.id);
 
 
