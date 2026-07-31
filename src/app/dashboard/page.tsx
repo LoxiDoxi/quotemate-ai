@@ -206,14 +206,18 @@ export default function DashboardPage() {
             </a>
 
 
-            {plan !== "pro" && (
-              <button
-                onClick={upgradeToPro}
-                className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-              >
-                Upgrade to Pro - $19/month
-              </button>
-            )}
+            {plan === "pro" ? (
+  <div className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white">
+    Pro Plan ⭐
+  </div>
+) : (
+  <button
+    onClick={upgradeToPro}
+    className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+  >
+    Upgrade to Pro - $19/month
+  </button>
+)}
 
           </div>
 

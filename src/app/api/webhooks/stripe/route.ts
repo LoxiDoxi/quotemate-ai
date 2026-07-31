@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
 export async function POST(req: Request) {
@@ -40,7 +40,6 @@ export async function POST(req: Request) {
     );
   }
 
-
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -56,7 +55,6 @@ export async function POST(req: Request) {
         );
       }
 
-
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -65,7 +63,6 @@ export async function POST(req: Request) {
           subscription_id: session.subscription,
         })
         .eq("user_id", userId);
-
 
       if (error) {
         console.error("Supabase update error:", error.message);
@@ -76,15 +73,12 @@ export async function POST(req: Request) {
         );
       }
 
-
       console.log("User upgraded:", userId);
     }
-
 
     return NextResponse.json({
       received: true,
     });
-
 
   } catch (error: any) {
     console.error("Webhook error:", error.message);
