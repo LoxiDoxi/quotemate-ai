@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
@@ -41,39 +41,60 @@ export async function POST(req: Request) {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-      const userId = session.metadata?.user_id;
+        const userId = session.metadata?.user_id;
 
-      if (!userId) {
-        console.error("Missing user_id in metadata");
+        if (!userId) {
+          console.error("No user_id metadata found");
+          break;
+        }
 
-        return NextResponse.json(
-          { error: "Missing user id" },
-          { status: 400 }
-        );
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            plan: "pro",
+            stripe_customer_id: session.customer,
+            subscription_id: session.subscription,
+          })
+          .eq("user_id", userId);
+
+        if (error) {
+          console.error("Profile upgrade failed:", error);
+          return NextResponse.json(
+            { error: "Database update failed" },
+            { status: 500 }
+          );
+        }
+
+        console.log("Successfully upgraded user:", userId);
+
+        break;
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          plan: "pro",
-          stripe_customer_id: session.customer,
-          subscription_id: session.subscription,
-        })
-        .eq("user_id", userId);
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
 
-      if (error) {
-        console.error("Supabase update error:", error.message);
+        await supabase
+          .from("profiles")
+          .update({
+            plan: "free",
+            subscription_id: null,
+          })
+          .eq(
+            "stripe_customer_id",
+            subscription.customer
+          );
 
-        return NextResponse.json(
-          { error: error.message },
-          { status: 500 }
-        );
+        console.log("Subscription cancelled");
+
+        break;
       }
 
-      console.log("User upgraded:", userId);
+      default:
+        console.log("Unhandled event:", event.type);
     }
 
     return NextResponse.json({
@@ -81,7 +102,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("Webhook error:", error.message);
+    console.error("Webhook processing error:", error.message);
 
     return NextResponse.json(
       {
