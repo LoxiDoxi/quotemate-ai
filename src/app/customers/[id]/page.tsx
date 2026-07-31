@@ -40,32 +40,20 @@ export default function CustomerProfilePage() {
 
 
       const {
-        data: { session },
+        data: {
+          session,
+        },
       } = await supabase.auth.getSession();
 
 
-      if (!session?.user) {
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000)
-        );
-
-      }
-
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const user = session?.user;
 
 
       if (!user) {
-
-        router.replace("/login");
+        console.log("No session found");
+        setLoading(false);
         return;
-
       }
-
 
 
       const { data: customerData, error: customerError } =
@@ -77,38 +65,38 @@ export default function CustomerProfilePage() {
           .single();
 
 
-
       if (customerError) {
 
-        console.log(customerError);
+        console.error(customerError);
         setLoading(false);
         return;
 
       }
 
 
-
       setCustomer(customerData);
 
 
 
-      const { data: quoteData } = await supabase
-        .from("quotes")
-        .select("*")
-        .eq("customer_id", customerId)
-        .eq("user_id", user.id)
-        .order("createdAt", {
-          ascending: false,
-        });
+      const { data: quoteData, error: quoteError } =
+        await supabase
+          .from("quotes")
+          .select("*")
+          .eq("customer_id", customerId)
+          .eq("user_id", user.id)
+          .order("createdAt", {
+            ascending: false,
+          });
 
+
+      if (quoteError) {
+        console.error(quoteError);
+      }
 
 
       if (quoteData) {
-
         setQuotes(quoteData);
-
       }
-
 
 
       setLoading(false);
@@ -116,15 +104,12 @@ export default function CustomerProfilePage() {
     }
 
 
-
     if (customerId) {
-
       loadCustomer();
-
     }
 
 
-  }, [customerId, router]);
+  }, [customerId]);
 
 
 
@@ -175,9 +160,7 @@ export default function CustomerProfilePage() {
           <div className="mt-5 space-y-2">
 
             {customer.phone && <p>📞 {customer.phone}</p>}
-
             {customer.email && <p>✉️ {customer.email}</p>}
-
             {customer.address && <p>📍 {customer.address}</p>}
 
           </div>
@@ -214,11 +197,9 @@ export default function CustomerProfilePage() {
                     {quote.jobType}
                   </h3>
 
-
                   <p>
                     {quote.jobNotes}
                   </p>
-
 
                   <p className="mt-2 text-sm text-slate-500">
                     {new Date(
