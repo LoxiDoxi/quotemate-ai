@@ -57,25 +57,45 @@ function parseQuote(content: string): Quote {
 
 export async function POST(request: NextRequest) {
   try {
-  const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
-  console.log("COOKIES CHECK");
-  console.log(await supabase.auth.getSession());
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-const {
-  data: { user },
-  error: userError,
-} = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
 
-console.log("SERVER USER:", user);
-console.log("SERVER AUTH ERROR:", userError);
 
-if (!user) {
-  return NextResponse.json(
-    { error: "Not authenticated" },
-    { status: 401 }
-  );
-}
+    // FREE PLAN LIMIT CHECK
+    const { count, error: countError } = await supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+
+    if (countError) {
+      console.error("Limit check failed:", countError);
+    }
+
+
+    if ((count ?? 0) >= 5) {
+      return NextResponse.json(
+        {
+          error:
+            "You have reached your free quote limit. Upgrade to Pro to create unlimited quotes.",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -83,6 +103,7 @@ if (!user) {
         { status: 500 }
       );
     }
+
 
     const body = await request.json();
 
@@ -94,6 +115,7 @@ if (!user) {
         { status: 400 }
       );
     }
+
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -114,7 +136,9 @@ if (!user) {
       },
     });
 
+
     const content = completion.choices[0]?.message?.content;
+
 
     if (!content) {
       return NextResponse.json(
@@ -123,7 +147,9 @@ if (!user) {
       );
     }
 
+
     const quote = parseQuote(content);
+
 
     const { error: saveError } = await supabase
       .from("quotes")
@@ -133,19 +159,23 @@ if (!user) {
         customerName: input.customerName,
         jobType: input.jobType,
         jobNotes: input.jobNotes,
-        quote: quote,
+        quote,
         createdAt: new Date().toISOString(),
       });
+
 
     if (saveError) {
       console.error("Failed to save quote:", saveError);
     }
 
+
     const response: GenerateQuoteResponse = {
       quote,
     };
 
+
     return NextResponse.json(response);
+
 
   } catch (err) {
     console.error("Quote generation failed:", err);
