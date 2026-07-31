@@ -12,11 +12,18 @@ if (!supabaseUrl) {
 
 if (!supabaseKey) {
   throw new Error(
-    "Supabase publishable key is missing from .env.local",
+    "Supabase publishable key is missing from .env.local"
   );
 }
 
 export const supabase = createBrowserClient(
   supabaseUrl,
-  supabaseKey
+  supabaseKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
 );
