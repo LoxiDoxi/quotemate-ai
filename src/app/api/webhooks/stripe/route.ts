@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-06-24.dahlia",
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: Request) {
   const body = await req.text();
-
   const sig = req.headers.get("stripe-signature");
 
   if (!sig) {
@@ -23,7 +17,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let event;
+  let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -32,7 +26,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error(err.message);
+    console.error("Webhook error:", err.message);
 
     return NextResponse.json(
       { error: "Webhook verification failed" },
@@ -44,26 +38,38 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    console.log("Payment successful:", session.id);
+    console.log("Payment completed:", session.id);
 
 
-    const customerEmail = session.customer_details?.email;
+    const userId = session.metadata?.user_id;
 
-    if (customerEmail) {
+    console.log("User ID:", userId);
 
-      await supabase
+
+    if (userId) {
+      const supabase = await createSupabaseServerClient();
+
+
+      const { error } = await supabase
         .from("profiles")
         .update({
           plan: "pro",
           stripe_customer_id: session.customer,
           subscription_id: session.subscription,
         })
-        .eq("email", customerEmail);
+        .eq("user_id", userId);
 
-      console.log("User upgraded:", customerEmail);
+
+      if (error) {
+        console.error("Supabase update error:", error);
+      } else {
+        console.log("User upgraded to Pro");
+      }
     }
   }
 
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({
+    received: true,
+  });
 }
