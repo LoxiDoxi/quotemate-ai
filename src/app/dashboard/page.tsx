@@ -31,37 +31,38 @@ export default function DashboardPage() {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [plan, setPlan] = useState("free");
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
 
   useEffect(() => {
     async function loadQuotes() {
       setIsLoading(true);
-      setError("");
 
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
 
+
       if (userError || !user) {
         router.replace("/login");
         return;
       }
 
-      // Load user's subscription plan
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("plan")
         .eq("user_id", user.id)
         .single();
 
+
       if (!profileError && profile?.plan) {
         setPlan(profile.plan);
       }
 
 
-      // Load only this user's quotes
       const { data, error: quotesError } = await supabase
         .from("quotes")
         .select("*")
@@ -76,11 +77,15 @@ export default function DashboardPage() {
         setQuotes((data ?? []) as SavedQuote[]);
       }
 
+
       setIsLoading(false);
     }
 
+
     void loadQuotes();
+
   }, [router]);
+
 
 
   const filteredQuotes = useMemo(() => {
@@ -93,13 +98,17 @@ export default function DashboardPage() {
       savedQuote.jobType.toLowerCase().includes(query) ||
       savedQuote.quote.title.toLowerCase().includes(query)
     );
+
   }, [quotes, search]);
 
 
+
   async function deleteQuote(id: string) {
+
     const confirmed = window.confirm(
       "Delete this quote? This cannot be undone."
     );
+
 
     if (!confirmed) return;
 
@@ -128,6 +137,7 @@ export default function DashboardPage() {
   }
 
 
+
   async function handleLogout() {
     await supabase.auth.signOut({ scope: "local" });
     router.replace("/login");
@@ -135,8 +145,11 @@ export default function DashboardPage() {
   }
 
 
+
   async function upgradeToPro() {
+
     try {
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -170,10 +183,49 @@ export default function DashboardPage() {
 
 
     } catch (error) {
+
       console.error(error);
       alert("Something went wrong opening checkout");
+
     }
+
   }
+
+
+
+  async function manageBilling() {
+
+    try {
+
+      const response = await fetch("/api/customer-portal", {
+        method: "POST",
+      });
+
+
+      const data = await response.json();
+
+
+      if (data.url) {
+
+        window.location.href = data.url;
+
+      } else {
+
+        alert(data.error || "Could not open billing portal");
+
+      }
+
+
+    } catch (error) {
+
+      console.error(error);
+      alert("Billing portal failed");
+
+    }
+
+  }
+
+
 
 
   return (
@@ -183,7 +235,9 @@ export default function DashboardPage() {
 
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5">
 
+
           <div className="flex items-center gap-3">
+
 
             <a href="/" className="flex items-center gap-3">
 
@@ -193,9 +247,11 @@ export default function DashboardPage() {
 
 
               <div>
+
                 <p className="font-bold">
                   QuoteMate AI
                 </p>
+
 
                 <p className="text-xs text-slate-400">
                   {plan === "pro" ? "Pro Plan ⭐" : "Free Plan"}
@@ -206,44 +262,56 @@ export default function DashboardPage() {
             </a>
 
 
+
             {plan === "pro" ? (
-  <div className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white">
-    Pro Plan ⭐
-  </div>
-) : (
-  <button
-    onClick={upgradeToPro}
-    className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-  >
-    Upgrade to Pro - $19/month
-  </button>
-)}
+
+              <div className="flex gap-2">
+
+                <div className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white">
+                  Pro Plan ⭐
+                </div>
+
+
+                <button
+                  onClick={manageBilling}
+                  className="rounded-lg bg-slate-700 px-5 py-3 font-semibold text-white"
+                >
+                  Manage Billing
+                </button>
+
+              </div>
+
+
+            ) : (
+
+              <button
+                onClick={upgradeToPro}
+                className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white"
+              >
+                Upgrade to Pro - $19/month
+              </button>
+
+            )}
+
 
           </div>
 
 
+
+
           <div className="flex flex-wrap gap-2">
 
-            <a
-              href="/customers"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
-            >
+            <a href="/customers" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold">
               Customers
             </a>
 
 
-            <a
-              href="/settings"
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold"
-            >
+            <a href="/settings" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold">
               Settings
             </a>
 
 
-            <a
-              href="/"
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold"
-            >
+            <a href="/" className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold">
               New quote
             </a>
 
@@ -257,12 +325,16 @@ export default function DashboardPage() {
 
           </div>
 
+
         </div>
 
       </header>
 
 
+
+
       <section className="mx-auto max-w-6xl px-6 py-12">
+
 
         <h1 className="text-4xl font-black">
           Quote history
@@ -282,6 +354,7 @@ export default function DashboardPage() {
         />
 
 
+
         {filteredQuotes.map((savedQuote)=>(
 
           <article
@@ -290,6 +363,7 @@ export default function DashboardPage() {
           >
 
             <div className="flex items-center justify-between">
+
 
               <div>
 
@@ -307,15 +381,15 @@ export default function DashboardPage() {
                   {formatDate(savedQuote.createdAt)}
                 </p>
 
+
               </div>
 
 
               <div className="flex gap-3">
 
+
                 <button
-                  onClick={() =>
-                    router.push(`/quote/${savedQuote.id}`)
-                  }
+                  onClick={() => router.push(`/quote/${savedQuote.id}`)}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-white"
                 >
                   Open quote
@@ -329,7 +403,9 @@ export default function DashboardPage() {
                   Delete
                 </button>
 
+
               </div>
+
 
             </div>
 
@@ -337,7 +413,9 @@ export default function DashboardPage() {
 
         ))}
 
+
       </section>
+
 
     </main>
   );
