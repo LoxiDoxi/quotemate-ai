@@ -40,42 +40,34 @@ export default function DashboardPage() {
     setIsLoading(true);
 
     const {
-  data: { session },
-} = await supabase.auth.getSession();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-const user = session?.user ?? null;
-
-
-if (!user) {
-  console.log("NO AUTH USER FOUND");
-  setError("Please refresh and login again.");
-  setIsLoading(false);
-  return;
-}
+    const user = session?.user ?? null;
 
 
-    // force fresh profile data
+    if (!user) {
+      console.log("NO AUTH USER FOUND");
+      setError("Please refresh and login again.");
+      setIsLoading(false);
+      return;
+    }
+
+
     const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("user_id", user.id)
-  .maybeSingle();
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-console.log("PROFILE FROM DATABASE:", profile);
-console.log("PROFILE ERROR:", profileError);
 
-console.log("PROFILE FROM DATABASE:", profile);
-console.log("PROFILE ERROR:", profileError);
+    console.log("PROFILE FROM DATABASE:", profile);
+    console.log("PROFILE ERROR:", profileError);
 
-if (profileError) {
-  console.log("PROFILE FAILED:", profileError);
-}
 
-if (profile) {
-  setPlan(profile.plan);
-  console.log("FINAL PLAN:", profile.plan);
-}
-
+    if (profile) {
+      setPlan(profile.plan);
+    }
 
 
     const { data, error: quotesError } = await supabase
@@ -86,14 +78,10 @@ if (profile) {
 
 
     if (quotesError) {
-
       setError(quotesError.message);
       setQuotes([]);
-
     } else {
-
       setQuotes((data ?? []) as SavedQuote[]);
-
     }
 
 
@@ -104,8 +92,8 @@ if (profile) {
 
 
   useEffect(() => {
-  loadDashboard();
-}, []);
+    loadDashboard();
+  }, []);
 
 
 
@@ -159,7 +147,6 @@ if (profile) {
 
 
 
-
   async function handleLogout(){
 
     await supabase.auth.signOut();
@@ -167,8 +154,6 @@ if (profile) {
     router.replace("/login");
 
   }
-
-
 
 
 
@@ -216,8 +201,6 @@ if (profile) {
     }
 
   }
-
-
 
 
 
@@ -336,6 +319,21 @@ Quote history
 <p className="mt-3 text-slate-300">
 Quotes saved securely to your account.
 </p>
+
+
+<p className="mt-2 text-sm text-slate-400">
+{plan==="pro"
+? "Pro plan: Unlimited quotes"
+: "Free plan: 5 quotes per month"}
+</p>
+
+
+<button
+onClick={() => router.push("/quote")}
+className="mt-6 rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
+>
+Create New Quote
+</button>
 
 
 <input
