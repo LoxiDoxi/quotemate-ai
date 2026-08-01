@@ -64,10 +64,10 @@ export async function POST(req: Request) {
       },
 
       success_url:
-        "https://quotemate-ai.vercel.app/success?session_id={CHECKOUT_SESSION_ID}",
+  "https://quotemateai.com.au/success?session_id={CHECKOUT_SESSION_ID}",
 
       cancel_url:
-        "https://quotemate-ai.vercel.app/dashboard?cancelled=true",
+  "https://quotemateai.com.au/dashboard?cancelled=true",
 
     });
 
