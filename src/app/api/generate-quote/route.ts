@@ -89,10 +89,17 @@ if (profileError) {
 const isPro = profile?.plan === "pro";
 
 
+const startOfMonth = new Date();
+
+startOfMonth.setDate(1);
+startOfMonth.setHours(0,0,0,0);
+
+
 const { count, error: countError } = await supabase
   .from("quotes")
   .select("*", { count: "exact", head: true })
-  .eq("user_id", user.id);
+  .eq("user_id", user.id)
+  .gte("createdAt", startOfMonth.toISOString());
 
 
 if (countError) {
