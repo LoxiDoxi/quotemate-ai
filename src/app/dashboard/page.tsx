@@ -329,7 +329,7 @@ Quotes saved securely to your account.
 
 
 <button
-onClick={() => router.push("/quote")}
+onClick={() => router.push("/")}
 className="mt-6 rounded-lg bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
 >
 Create New Quote
