@@ -1,6 +1,14 @@
 export default function TermsPage() {
   return (
     <main className="max-w-3xl mx-auto p-8">
+
+        <a 
+  href="/"
+  className="text-blue-600 hover:underline mb-6 inline-block"
+>
+  ← Back to QuoteMate AI
+</a>
+
       <h1 className="text-3xl font-bold mb-6">
         Terms of Service
       </h1>
