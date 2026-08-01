@@ -33,6 +33,8 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [billingError, setBillingError] = useState("");
 
 
   async function loadDashboard() {
@@ -116,34 +118,9 @@ export default function DashboardPage() {
 
 
 
-  async function deleteQuote(id:string){
-
-    const confirmed = window.confirm(
-      "Delete this quote? This cannot be undone."
-    );
-
-
-    if(!confirmed) return;
-
-
-    const {
-      data:{user}
-    } = await supabase.auth.getUser();
-
-
-    if(!user) return;
-
-
-    await supabase
-      .from("quotes")
-      .delete()
-      .eq("id",id)
-      .eq("user_id",user.id);
-
-
-    loadDashboard();
-
-  }
+  async function deleteQuote(id: string) {
+  setDeleteId(id);
+}
 
 
 
@@ -223,7 +200,7 @@ export default function DashboardPage() {
 
     }else{
 
-      alert(data.error || "Billing failed");
+      setBillingError(data.error || "Billing failed");
 
     }
 
@@ -409,7 +386,28 @@ Delete
 
 </section>
 
+        {/* Manage Billing Error Popup */}
+        {billingError && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-white rounded-xl p-6 text-center">
+              <h2 className="text-xl font-bold mb-3">
+                Billing Error
+              </h2>
 
-</main>
-  );
+              <p className="text-gray-600 mb-4">
+                {billingError}
+              </p>
+
+              <button
+                onClick={() => setBillingError("")}
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
+      </main>
+    );
 }

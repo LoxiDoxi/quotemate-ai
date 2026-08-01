@@ -4,6 +4,7 @@ import { buildQuotePrompt } from "@/lib/prompt";
 import type { GenerateQuoteResponse, Quote, QuoteRequest } from "@/lib/types";
 import { JOB_TYPES } from "@/lib/types";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { getPricing } from "@/lib/pricing";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -139,20 +140,37 @@ if (!isPro && (count ?? 0) >= 5) {
         { status: 400 }
       );
     }
+    const pricingData = await getPricing(
+  input.jobType,
+  input.jobNotes
+);
 
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
-          role: "system",
-          content:
-            "You generate professional tradesperson quotes. Return valid JSON only.",
-        },
-        {
-          role: "user",
-          content: buildQuotePrompt(input),
-        },
+  role: "user",
+  content: `
+${buildQuotePrompt(input)}
+
+IMPORTANT PRICING RULES:
+
+Use the pricing database below.
+
+Do not invent prices if matching pricing exists.
+
+Pricing database:
+${JSON.stringify(pricingData)}
+
+Use realistic:
+- material costs
+- labour hours
+- hourly rates
+
+If no matching pricing exists, create a reasonable estimate.
+`,
+},
       ],
       temperature: 0.4,
       response_format: {
