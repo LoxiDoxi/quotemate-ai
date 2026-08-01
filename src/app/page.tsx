@@ -201,6 +201,46 @@ console.log("PAGE USER ERROR:", userError);
                   </div>
                 ))}
               </div>
+              <div className="mt-8 grid max-w-xl gap-4 sm:grid-cols-2">
+
+<div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+
+<h3 className="text-xl font-bold text-white">
+Free Plan
+</h3>
+
+<p className="mt-2 text-blue-400 font-bold">
+$0/month
+</p>
+
+<ul className="mt-4 space-y-2 text-sm text-slate-300">
+<li>✓ 5 AI quotes per month</li>
+<li>✓ Save quote history</li>
+<li>✓ All trade categories</li>
+</ul>
+
+</div>
+
+
+<div className="rounded-3xl border border-blue-500/50 bg-blue-500/10 p-6 backdrop-blur">
+
+<h3 className="text-xl font-bold text-white">
+Pro Plan ⭐
+</h3>
+
+<p className="mt-2 text-blue-400 font-bold">
+$19/month
+</p>
+
+<ul className="mt-4 space-y-2 text-sm text-slate-300">
+<li>✓ Unlimited AI quotes</li>
+<li>✓ Unlimited quote history</li>
+<li>✓ Built for professional tradies</li>
+</ul>
+
+</div>
+
+</div>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white p-6 shadow-2xl shadow-black/30 sm:p-8">
