@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import QuoteForm from "@/components/QuoteForm";
 import QuoteResult from "@/components/QuoteResult";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +24,50 @@ export default function HomePage() {
   const [customerName, setCustomerName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [plan, setPlan] = useState("");
+  const [quoteCount, setQuoteCount] = useState(0);
+
+  useEffect(() => {
+
+async function loadQuoteInfo(){
+
+const {
+data:{
+user
+}
+} = await supabase.auth.getUser();
+
+
+if(!user) return;
+
+
+// Get plan
+const { data: profile } = await supabase
+.from("profiles")
+.select("plan")
+.eq("user_id", user.id)
+.single();
+
+
+setPlan(profile?.plan || "free");
+
+
+// Get quote count
+const { count } = await supabase
+.from("quotes")
+.select("*", { count: "exact", head: true })
+.eq("user_id", user.id);
+
+
+setQuoteCount(count || 0);
+
+}
+
+
+loadQuoteInfo();
+
+}, []);
 
   async function handleGenerate(data: {
   customerId?: number;
@@ -256,7 +300,35 @@ $19/month
                   notes below.
                 </p>
               </div>
+<div className="mb-6 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 text-white">
 
+  {plan === "pro" ? (
+    <>
+      <p className="font-bold text-blue-400">
+        Pro Plan ⭐
+      </p>
+
+      <p className="text-sm text-slate-300">
+        Unlimited AI quotes
+      </p>
+    </>
+  ) : (
+    <>
+      <p className="font-bold text-blue-400">
+        Free Plan
+      </p>
+
+      <p className="text-sm text-slate-300">
+        {quoteCount}/5 quotes used this month
+      </p>
+
+      <p className="mt-2 text-sm text-slate-400">
+        Upgrade to Pro for unlimited quotes.
+      </p>
+    </>
+  )}
+
+</div>
               <QuoteForm onSubmit={handleGenerate} isLoading={isLoading} />
 
               {error && (
