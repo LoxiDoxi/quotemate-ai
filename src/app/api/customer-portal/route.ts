@@ -30,21 +30,15 @@ export async function POST() {
       }
     );
 
-
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
-
     if (userError || !user) {
       return NextResponse.json(
-        {
-          error: "Not logged in",
-        },
-        {
-          status: 401,
-        }
+        { error: "Not logged in" },
+        { status: 401 }
       );
     }
 
@@ -59,7 +53,22 @@ export async function POST() {
     if (profileError || !profile?.stripe_customer_id) {
       return NextResponse.json(
         {
-          error: "No Stripe customer found",
+          error: "No active Stripe subscription found. Upgrade to Pro first.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+
+    // Check the Stripe customer is real
+    try {
+      await stripe.customers.retrieve(profile.stripe_customer_id);
+    } catch {
+      return NextResponse.json(
+        {
+          error: "No active Stripe subscription found. Upgrade to Pro first.",
         },
         {
           status: 400,
