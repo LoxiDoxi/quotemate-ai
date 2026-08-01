@@ -19,7 +19,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen antialiased">
-        {children}
+
+<nav className="border-b p-4 flex justify-between items-center">
+  <a href="/" className="font-bold text-xl">
+    QuoteMate AI
+  </a>
+
+  <div className="flex gap-5">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/settings">Settings</a>
+    <a href="/login">Login</a>
+  </div>
+</nav>
+
+{children}
 
         <footer className="border-t mt-10 py-8 text-center text-sm text-gray-500">
           <p className="font-semibold text-gray-700">
