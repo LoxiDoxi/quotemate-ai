@@ -112,10 +112,10 @@ export default function LoginPage() {
         >
 
           <img
-            src="/logo.png"
-            alt="QuoteMate AI"
-            className="h-12 w-12 rounded-2xl object-contain"
-          />
+ src="/logo.png"
+ alt="QuoteMate AI"
+ className="h-11 w-11 rounded-2xl object-contain"
+/>
 
           <div>
 

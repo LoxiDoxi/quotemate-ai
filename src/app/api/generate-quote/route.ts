@@ -4,7 +4,6 @@ import { buildQuotePrompt } from "@/lib/prompt";
 import type { GenerateQuoteResponse, Quote, QuoteRequest } from "@/lib/types";
 import { JOB_TYPES } from "@/lib/types";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { getPricing } from "@/lib/pricing";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -73,59 +72,35 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // PLAN + FREE QUOTE LIMIT CHECK
-
-const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("plan")
-  .eq("user_id", user.id)
-  .maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
 
-if (profileError) {
-  console.error("Profile check failed:", profileError);
-}
+    const isPro = profile?.plan === "pro";
 
 
-const isPro = profile?.plan === "pro";
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0,0,0,0);
 
 
-const startOfMonth = new Date();
-
-startOfMonth.setDate(1);
-startOfMonth.setHours(0,0,0,0);
-
-
-const { count, error: countError } = await supabase
-  .from("quotes")
-  .select("*", { count: "exact", head: true })
-  .eq("user_id", user.id)
-  .gte("createdAt", startOfMonth.toISOString());
+    const { count } = await supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("createdAt", startOfMonth.toISOString());
 
 
-if (countError) {
-  console.error("Limit check failed:", countError);
-}
-
-
-// Only block FREE users
-if (!isPro && (count ?? 0) >= 5) {
-  return NextResponse.json(
-    {
-      error:
-        "You have reached your free quote limit. Upgrade to Pro to create unlimited quotes.",
-    },
-    {
-      status: 403,
-    }
-  );
-}
-
-
-    if (!process.env.OPENAI_API_KEY) {
+    if (!isPro && (count ?? 0) >= 5) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
-        { status: 500 }
+        {
+          error:
+            "You have reached your free quote limit. Upgrade to Pro.",
+        },
+        { status: 403 }
       );
     }
 
@@ -140,37 +115,28 @@ if (!isPro && (count ?? 0) >= 5) {
         { status: 400 }
       );
     }
-    const pricingData = await getPricing(
-  input.jobType,
-  input.jobNotes
-);
 
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
-  role: "user",
-  content: `
+          role: "user",
+          content: `
 ${buildQuotePrompt(input)}
 
-IMPORTANT PRICING RULES:
+Generate realistic Australian trade pricing.
 
-Use the pricing database below.
-
-Do not invent prices if matching pricing exists.
-
-Pricing database:
-${JSON.stringify(pricingData)}
-
-Use realistic:
-- material costs
+Include:
+- materials
 - labour hours
-- hourly rates
+- hourly rate
+- total price
 
-If no matching pricing exists, create a reasonable estimate.
+Do NOT return $0.
+Create the complete quote yourself.
 `,
-},
+        },
       ],
       temperature: 0.4,
       response_format: {
@@ -193,6 +159,7 @@ If no matching pricing exists, create a reasonable estimate.
     const quote = parseQuote(content);
 
 
+    // Save quote
     const { error: saveError } = await supabase
       .from("quotes")
       .insert({

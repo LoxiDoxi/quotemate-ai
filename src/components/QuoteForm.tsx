@@ -92,26 +92,40 @@ export default function QuoteForm({
 
 
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
 
-    event.preventDefault();
+  event.preventDefault();
 
 
-    onSubmit({
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      customerId: selectedCustomer
-        ? Number(selectedCustomer)
-        : undefined,
+  console.log("CURRENT USER:", user);
 
-      customerName,
-      customerPhone,
-      customerEmail,
-      customerAddress,
-      jobType,
-      jobNotes,
 
-    });
-  }
+  if (!user) {
+  alert("Please login or create an account before generating a quote.");
+  window.location.href = "/login";
+  return;
+}
+
+
+  onSubmit({
+
+    customerId: selectedCustomer
+      ? Number(selectedCustomer)
+      : undefined,
+
+    customerName,
+    customerPhone,
+    customerEmail,
+    customerAddress,
+    jobType,
+    jobNotes,
+
+  });
+}
 
 
 

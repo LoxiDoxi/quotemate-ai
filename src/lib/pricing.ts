@@ -4,24 +4,19 @@ export async function getPricing(
   jobType: string,
   jobNotes: string
 ) {
+
   const supabase = await createSupabaseServerClient();
 
-  const searchText = `${jobType} ${jobNotes}`;
 
   const { data, error } = await supabase
     .from("trade_pricing")
-    .select("*")
-    .or(
-      `job_name.ilike.%${searchText}%,trade.ilike.%${jobType}%`
-    )
-    .limit(5);
+    .select("*");
 
 
-  if (error) {
-    console.error("Pricing lookup failed:", error);
-    return [];
-  }
+  console.log("ALL PRICING ROWS:", data);
+  console.log("SUPABASE ERROR:", error);
 
 
-  return data || [];
+  return data ?? [];
+
 }

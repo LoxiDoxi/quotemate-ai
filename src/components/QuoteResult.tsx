@@ -25,9 +25,9 @@ interface QuoteResultProps {
 const defaultProfile: BusinessProfile = {
   businessName: "QuoteMate AI",
   logoUrl: "/logo.png",
-  abn: "ABN COMING SOON",
-  phone: "0400 000 000",
-  email: "hello@quotemate.ai",
+  abn: "15 154 226 673",
+  phone: "",
+  email: "quotemateai@gmail.com",
   address: "Australia",
 };
 
@@ -200,7 +200,7 @@ const labourTotal = quote.labor.reduce(
 
   generatePDF({
     businessName: business.businessName,
-    logoUrl: business.logoUrl,
+    logoUrl: "/logo.png",
     abn: business.abn,
     phone: business.phone,
     email: business.email,
@@ -267,7 +267,7 @@ estimatedTotal: `$${estimatedTotal.toFixed(2)}`,
         <header className="bg-slate-950 px-6 py-7 text-white sm:px-10">
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
+              <div className="flex h-20 w-48 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
   <img
     src="/logo.png"
     alt="QuoteMate AI"
