@@ -43,6 +43,21 @@ export default function RootLayout({
           <p className="mt-2">
             © {new Date().getFullYear()} QuoteMate AI. All rights reserved.
           </p>
+
+          <div className="flex gap-4 justify-center mt-4">
+  <a href="/privacy" className="hover:underline">
+    Privacy Policy
+  </a>
+
+  <a href="/terms" className="hover:underline">
+    Terms of Service
+  </a>
+
+  <a href="/refunds" className="hover:underline">
+    Refund Policy
+  </a>
+</div>
+
         </footer>
       </body>
     </html>
