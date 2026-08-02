@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QuoteMate AI",
-  description: "AI powered quoting software for Australian tradies",
+  title: "QuoteMate AI | AI Quote Generator for Australian Tradies",
+  description:
+    "Create professional quotes in seconds with QuoteMate AI. AI-powered quoting software built for Australian tradies, including plumbers, electricians, builders and contractors.",
   icons: {
   icon: "/icon.png?v=2",
   shortcut: "/icon.png",
