@@ -3,13 +3,52 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "QuoteMate AI | AI Quote Generator for Australian Tradies",
+
   description:
-    "Create professional quotes in seconds with QuoteMate AI. AI-powered quoting software built for Australian tradies, including plumbers, electricians, builders and contractors.",
+    "Create professional quotes in seconds with QuoteMate AI. AI-powered quoting software built for Australian plumbers, electricians, builders and contractors.",
+
+  keywords: [
+    "AI quoting software",
+    "quote generator Australia",
+    "tradie software",
+    "plumber quoting software",
+    "electrician quoting software",
+    "builder quote software",
+    "AI business tools",
+    "Australian tradies"
+  ],
+
   icons: {
-  icon: "/icon.png?v=2",
-  shortcut: "/icon.png",
-  apple: "/icon.png",
-},
+    icon: "/icon.png?v=2",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
+
+  openGraph: {
+    title: "QuoteMate AI | AI Quote Generator for Australian Tradies",
+    description:
+      "Create professional quotes in seconds with AI-powered quoting software made for Australian tradies.",
+    url: "https://www.quotemateai.com.au",
+    siteName: "QuoteMate AI",
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: "QuoteMate AI Logo",
+      },
+    ],
+    locale: "en_AU",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary",
+    title: "QuoteMate AI | AI Quote Generator for Australian Tradies",
+    description:
+      "AI-powered quoting software helping Australian tradies create professional quotes faster.",
+    images: ["/icon.png"],
+  },
 };
 
 export default function RootLayout({
@@ -21,20 +60,20 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased">
 
-<nav className="border-b p-4 flex justify-between items-center">
-  <a href="/" className="font-bold text-xl">
-    QuoteMate AI
-  </a>
+        <nav className="border-b p-4 flex justify-between items-center">
+          <a href="/" className="font-bold text-xl">
+            QuoteMate AI
+          </a>
 
-  <div className="flex gap-5">
-    <a href="/">Home</a>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/settings">Settings</a>
-    <a href="/login">Login</a>
-  </div>
-</nav>
+          <div className="flex gap-5">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/settings">Settings</a>
+            <a href="/login">Login</a>
+          </div>
+        </nav>
 
-{children}
+        {children}
 
         <footer className="border-t mt-10 py-8 text-center text-sm text-gray-500">
           <p className="font-semibold text-gray-700">
@@ -60,20 +99,21 @@ export default function RootLayout({
           </p>
 
           <div className="flex gap-4 justify-center mt-4">
-  <a href="/privacy" className="hover:underline">
-    Privacy Policy
-  </a>
+            <a href="/privacy" className="hover:underline">
+              Privacy Policy
+            </a>
 
-  <a href="/terms" className="hover:underline">
-    Terms of Service
-  </a>
+            <a href="/terms" className="hover:underline">
+              Terms of Service
+            </a>
 
-  <a href="/refunds" className="hover:underline">
-    Refund Policy
-  </a>
-</div>
+            <a href="/refunds" className="hover:underline">
+              Refund Policy
+            </a>
+          </div>
 
         </footer>
+
       </body>
     </html>
   );
