@@ -56,20 +56,13 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-
   "name": "QuoteMate AI",
-
   "url": "https://www.quotemateai.com.au",
-
   "logo": "https://www.quotemateai.com.au/icon.png",
-
   "description":
     "AI-powered quoting software built for Australian tradies including plumbers, electricians, builders and contractors.",
-
   "applicationCategory": "BusinessApplication",
-
   "operatingSystem": "Web",
-
   "provider": {
     "@type": "Organization",
     "name": "QuoteMate AI",
@@ -90,6 +83,25 @@ export default function RootLayout({
 
       <body className="min-h-screen antialiased">
 
+
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-5FLYTCH3C7"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-5FLYTCH3C7');
+          `}
+        </Script>
+
+
+        {/* Google SEO Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
