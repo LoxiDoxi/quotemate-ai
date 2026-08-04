@@ -108,7 +108,7 @@ export async function generatePDF(data: PDFData) {
 
 
   doc.text(
-    `Email: ${data.email || "quotemateai@gmail.com"}`,
+    `Email: ${data.email || "hello@quotemateai.com.au"}`,
     75,
     headerY
   );
