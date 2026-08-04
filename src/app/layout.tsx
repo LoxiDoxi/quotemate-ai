@@ -141,10 +141,10 @@ gtag('config', 'G-5FLYTCH3C7');
           <p>
             Support:{" "}
             <a
-              href="mailto:quotemateai@gmail.com"
+              href="mailto:hello@quotemateai.com.au"
               className="text-blue-600 hover:underline"
             >
-              quotemateai@gmail.com
+              hello@quotemateai.com.au
             </a>
           </p>
 

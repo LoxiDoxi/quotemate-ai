@@ -27,7 +27,7 @@ const defaultProfile: BusinessProfile = {
   logoUrl: "/logo.png",
   abn: "15 154 226 673",
   phone: "",
-  email: "quotemateai@gmail.com",
+  email: "hello@quotemateai.com.au",
   address: "Australia",
 };
 
